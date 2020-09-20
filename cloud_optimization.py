@@ -4,6 +4,7 @@ import random
 import multiprocessing
 import time
 import heapq
+import webbrowser
 
 # list of Server Units
 number_of_units = 12
@@ -13,19 +14,23 @@ unit_objects = []
 
 # quantity of cpu(unit) / ram(GB) and storage(GB)
 class Unit():
-    def __init__(self, name):
+    def __init__(self, name, number):
         # these are static
         self.name = name
+        self.number = number
         self.cpu = 128
         self.ram = 1000
         self.storage = 70000
         # these are dynamic
         self.number_of_clients = 0
+        self.heap = list() 
         self.client_ids = dict()
         self.used_cpu = 0
         self.used_ram = 0
-        self.used_storage = 0       
+        self.used_storage = 0
     
+    def _heapify(self):
+        heapq.heapify(self.heap)
 
     # Changing the amount of used hardware
     def update_used_hardware(self, c_change, r_change, s_change):
@@ -69,7 +74,7 @@ class Unit():
 
 # Creating Server Units
 for i in range(number_of_units):
-    obj = Unit("unit" + str(i + 1))
+    obj = Unit("unit" + str(i + 1), i + 1)
     unit_objects.append(obj)
 
 
@@ -92,7 +97,9 @@ text = """
 [3] Optimize Units ( for CPU, RAM or Storage )
 [4] Show Clients of one unit
 [5] Show Available percentage per Unit
+[6] Source Code
 [Else] Quit"""
+
 
 while True:
     os.system('cls')
@@ -143,8 +150,22 @@ while True:
             input("press enter to continue:")
             continue
 
-        unit_choice = int(input("To Which Unit [1 to 12] ? / 0 for random: "))
+        avail = list()
 
+        for i in unit_objects:
+            a,b,c = i.available_hardware()
+            if (a > client_cpu and b > client_ram and c > client_storage):
+                avail.append(i.number)
+
+        print()
+        print("Available Units are:")
+        print(avail)
+        
+        unit_choice = int(input("To Which Unit [1 to 12] ? / 0 for random: "))
+        if not unit_choice in range(13):
+            print("Invalid interval !")
+            input("Press enter to continue")
+            continue
 
         while True:
 
@@ -184,12 +205,10 @@ while True:
                 time.sleep(0.01)
                 input("press enter to continue: ")
                 break
-                # IF WE USE THE CODE BELOW , IT UPDATES HARDWARE TWICE ! ?! !?! 
-                #input("press enter to continue:")  // there is a bug
-                #if keyboard.is_pressed('enter'):
-                #    break
-            
-
+                # the on below gives interesting error :p, updating hardware twice
+                # >>>input("press enter to continue:") 
+                # >>>if keyboard.is_pressed('enter'):
+                # >>>    break
 
         
     elif operation == "2":
@@ -248,6 +267,7 @@ while True:
 
 
     elif operation == "5":
+        os.system('cls')
         print("AVAILABLE HARDWARE:")
         for num, unit in enumerate(unit_objects):
             c, r, s = unit.available_hardware_percentage()
@@ -255,14 +275,17 @@ while True:
             time.sleep(0.2)
         
         input("press enter to continue:")
-        continue          
+        continue       
+
+    elif operation == "6":
+        webbrowser.open("https://github.com/Sekomer/Server-Optimization-Model", new = 2)   
 
     else:
         for i in range(10): 
             os.system('cls')
             print("QUITING...")
             print("[" + "#" * (i+1) + " "*(9-i) + "]")
-            time.sleep(0.2)
+            time.sleep(1)
 
         os.system('cls')
         sys.exit()
