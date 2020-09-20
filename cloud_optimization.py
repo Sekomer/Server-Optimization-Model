@@ -3,6 +3,7 @@ import sys
 import random
 import multiprocessing
 import time
+import math
 import heapq
 import webbrowser
 
@@ -97,7 +98,8 @@ text = """
 [3] Optimize Units ( for CPU, RAM or Storage )
 [4] Show Clients of one unit
 [5] Show Available percentage per Unit
-[6] Source Code
+[6] Show Usage Bar per Unit
+[7] s0urce c0de
 [Else] Quit"""
 
 
@@ -112,43 +114,47 @@ while True:
         print("Enter your client id, needed cpu / ram / storage quantites (indicate if you want to choose specific unit)")
         
         client_id = input("Your Id (must be alphanumeric): ")
-        if not client_id.isalnum():
+        if not client_id.isalnum() or client_id == "":
             print("Invalid input !")
             input("press enter to continue:")
             continue
 
-        client_cpu = int(input("Amount of CPU (integer): "))
-        if not str(client_cpu).isnumeric():
+        client_cpu = input("Amount of CPU (integer): ")
+        if not str(client_cpu).isnumeric() or client_cpu == "":
             print("Invalid input !")
             input("press enter to continue:")
             continue
 
-        elif client_cpu > 128: 
+        elif int(client_cpu) > 128: 
             print("You can't take more than 128 CPU")
             input("press enter to continue:")
             continue
 
-        client_ram = int(input("Amount of RAM(GB): "))
-        if not str(client_ram).isnumeric():
+        client_ram = input("Amount of RAM(GB): ")
+        if not str(client_ram).isnumeric() or client_ram == "":
             print("Invalid input !")
             input("press enter to continue:")
             continue
 
-        elif client_ram > 1000: 
+        elif int(client_ram) > 1000: 
             print("You can't take more than 1TB RAM")
             input("press enter to continue:")
             continue
 
-        client_storage = int(input("Amount of Storage(GB): "))
-        if not str(client_storage).isnumeric():
+        client_storage = input("Amount of Storage(GB): ")
+        if not str(client_storage).isnumeric() or client_storage == "":
             print("Invalid input !")
             input("press enter to continue:")
             continue
 
-        elif client_storage > 70000: 
+        elif int(client_storage) > 70000: 
             print("You can't take more than 70TB Storage")
             input("press enter to continue:")
             continue
+
+        client_cpu = int(client_cpu)
+        client_ram = int(client_ram)
+        client_storage = int(client_storage)
 
         avail = list()
 
@@ -171,8 +177,9 @@ while True:
 
             # Checking if the random choosen or not
             if unit_choice == 0:
-                where = random.choice(unit_objects)
-                
+                rand = random.choice(avail)
+                where = unit_objects[rand - 1]
+
             else:
                 where = unit_objects[unit_choice - 1]
                     
@@ -271,13 +278,35 @@ while True:
         print("AVAILABLE HARDWARE:")
         for num, unit in enumerate(unit_objects):
             c, r, s = unit.available_hardware_percentage()
-            print(f"Unit{num + 1}: CPU: %{c:.2f}, RAM: %{r:.2f}, Storage: %{s:.2f}")
+            print(f"Unit{num + 1}:")
+            print(f"CPU: %{c:.2f}, RAM: %{r:.2f}, Storage: %{s:.2f}")
+            for item in (c, r, s):
+                percent = int(math.ceil(item/10))
+                print("[" + "#" * (percent) + " "*(10-percent) + "]", end=" ")
             time.sleep(0.2)
         
+        print()
         input("press enter to continue:")
         continue       
 
     elif operation == "6":
+        os.system('cls')
+        print("USED HARDWARE: (# is between 0 and 10)")
+        for num, unit in enumerate(unit_objects):
+            c, r, s = unit.used_hardware_percentage()
+            print(f"Unit{num + 1}:")
+            print(f"CPU: %{c:.2f}, RAM: %{r:.2f}, Storage: %{s:.2f}")
+            for item in (c, r, s):
+                percent = int(math.ceil(item/10))
+                print("[" + "#" * (percent) + " "*(10-percent) + "]", end=" ")
+            time.sleep(0.2)
+        
+        print()
+        input("press enter to continue:")
+        continue       
+
+
+    elif operation == "7":
         webbrowser.open("https://github.com/Sekomer/Server-Optimization-Model", new = 2)   
 
     else:
