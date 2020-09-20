@@ -53,12 +53,14 @@ class Unit():
     # Adds a client to self unit and updates used hardware 
     def add_client(self, client):
         self.client_ids[client.client_id] = (client.cpu, client.ram, client.storage)
-        #self.update_used_hardware(client.cpu, client.ram, client.storage) # there is a bug
+        self.number_of_clients +=1
+        self.update_used_hardware(client.cpu, client.ram, client.storage)
 
     # Removes a client from self unit and updates used hardware 
-    def remove_client(self, client, client_id):
-        del self.client_ids[client_id]
+    def remove_client(self, client):
+        del self.client_ids[client.client_id]
         self.update_used_hardware(-client.cpu, -client.ram, -client.storage)
+        self.number_of_clients -= 1
     
     # Returns percentage of available hardware as tuple(cpu,ram,storage)
     def available_hardware_percentage(self):
@@ -95,10 +97,10 @@ text = """
 [*] Welcome, enter the value of operation you'd like to do.
 [1] Create a Client 
 [2] Delete a Client
-[3] Optimize Units ( for CPU, RAM or Storage )
+[3] Optimize Units ( for CPU, RAM or Storage ) ***
 [4] Show Clients of one unit
-[5] Show Available percentage per Unit
-[6] Show Usage Bar per Unit
+[5] Show Available Hardware Bar per Unit
+[6] Show Used Hardware Bar per Unit
 [7] s0urce c0de
 [Else] Quit"""
 
@@ -194,9 +196,8 @@ while True:
             else:
                 new_client = Client(client_id, client_cpu, client_ram, client_storage, where)
                 where.add_client(new_client)
-                where.update_used_hardware(client_cpu, client_ram, client_storage)
+                #where.update_used_hardware(client_cpu, client_ram, client_storage)
 
-                where.number_of_clients += 1
                 os.system('cls')
                 print(f"[Client Added]",  
                       f"Client Id: {client_id} ", 
@@ -231,8 +232,7 @@ while True:
 
 
             if deleting in where.client_ids:
-                del where.client_ids[deleting]
-                where.clients -= 1
+                where.remove_client(deleting)
                 print(f"{deleting} is deleted from {unit_objects[deleting - 1].name}...")
                 input("press enter to continue:")
                 continue
