@@ -26,14 +26,16 @@ class Unit():
         self.storage = 70000
         # these are dynamic
         self.number_of_clients = 0
-        self.heap = list() 
-        self.client_ids = dict()
+        self.client_list = list() 
         self.used_cpu = 0
         self.used_ram = 0
         self.used_storage = 0
     
     def _heapify(self):
         heapq.heapify(self.heap)
+
+    def sort_clients_for_cpu(self):
+        return sorted(self.client_list, key= lambda x: x.cpu)
 
     # Changing the amount of used hardware
     def update_used_hardware(self, c_change, r_change, s_change):
@@ -54,13 +56,12 @@ class Unit():
 
     # Adds a client to self unit and updates used hardware 
     def add_client(self, client):
-        self.client_ids[client.client_id] = (client.cpu, client.ram, client.storage)
+        self.client_list.append(client)
         self.number_of_clients +=1
         self.update_used_hardware(client.cpu, client.ram, client.storage)
 
     # Removes a client from self unit and updates used hardware 
     def remove_client(self, client):
-        del self.client_ids[client.client_id]
         self.update_used_hardware(-client.cpu, -client.ram, -client.storage)
         self.number_of_clients -= 1
     
@@ -106,6 +107,8 @@ text = """
 [7] s0urce c0de
 [Else] Quit"""
 
+def return_max(iterable, arg):
+    return max(iterable ,key = lambda x: x.arg)
 
 while True:
     os.system('cls')
@@ -223,25 +226,27 @@ while True:
         
     elif operation == "2":
         os.system('cls')
-        which_unit = int(input("From which unit you'd like to delete client ?: "))
+        which_unit = int(input("From which unit you'd like to delete client ? (1 to 12): "))
         where = unit_objects[which_unit - 1]
 
         if where in unit_objects:
-            for i in where.client_ids:
-                print(i, end="\n")
+            names = [(i, i.client_id) for i in where.client_list]
+            for idd in names:
+                print(idd[1], end="\n")
         
-            deleting = input("Enter the ID you'd like to delete")
+            deleting = input("Enter the ID you'd like to delete: ")
+            flag = True
+            for i in names:
+                if i[1] == deleting:
+                    flag = False
+                    where.remove_client(i[0])
+                    print(f"{deleting} is deleted from {where.name.upper()}...")
+                    input("press enter to continue:")
+                    break
 
-
-            if deleting in where.client_ids:
-                where.remove_client(deleting)
-                print(f"{deleting} is deleted from {unit_objects[deleting - 1].name}...")
-                input("press enter to continue:")
-                continue
-
-            else:
+            if flag:
                 print("Wrong ID !!!")
-                time.sleep(3)
+                input("Press enter to continue :")
 
         else:
             os.system('cls')
@@ -250,8 +255,49 @@ while True:
 
 
     elif operation == "3":
-        # WAIT FOR ME BABE
-        pass
+        os.system('cls')
+        print("Optimization Options")
+        print("[1] Default Optimization {Common Best}", 
+              "[2] Optimize for CPUs", 
+              "[3] Optimize for RAM",
+              "[4]Optimize for Storage", sep="\n")
+
+        opt_type = input("Optimization Criteria: ")
+
+        if opt_type == "1":
+            pass
+
+        elif opt_type == "2":
+            #objects 
+            client_number_sorted = sorted(unit_objects, key= lambda x: x.number_of_clients)
+            crowded_units_list = [i for i in client_number_sorted if i.number_of_clients > 1]
+            # ooof moment
+            crowded_units_list = crowded_units_list[::-1]
+
+            # If there are empty units and crowded units, biggest unit of crowded goes to empty one
+            for i in crowded_units_list:    
+                while any(unit.used_cpu == 0 for unit in unit_objects) and i.number_of_clients > 1:
+                    # index 0 is lowest, index -1 is max
+                    cpu_sorted = sorted(unit_objects, key= lambda x: x.used_cpu)
+                    clients_of_crowded = i.sort_clients_for_cpu()
+                    # biggest client of crowded unit
+                    moving_client = clients_of_crowded[-1]
+                    i.remove_client(moving_client)                
+                    # as soon as there are empty units we can use first one in the list
+                    cpu_sorted[0].add_client(moving_client)
+            
+            
+        elif opt_type == "3":
+            pass
+
+        elif opt_type == "4":
+            pass
+
+        else:
+            os.system('cls')
+            print('Invalid Input !')
+            continue
+
 
     elif operation == "4":
         os.system('cls')
@@ -285,6 +331,7 @@ while True:
             for item in (c, r, s):
                 percent = int(math.ceil(item/10))
                 print("[" + "#" * (percent) + " "*(10-percent) + "]", end=" ")
+            print()
             time.sleep(0.2)
         
         print()
@@ -301,6 +348,7 @@ while True:
             for item in (c, r, s):
                 percent = int(math.ceil(item/10))
                 print("[" + "#" * (percent) + " "*(10-percent) + "]", end=" ")
+            print()
             time.sleep(0.2)
         
         print()
