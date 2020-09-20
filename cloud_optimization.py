@@ -1,3 +1,5 @@
+# by Sekomer 
+
 import os
 import sys
 import random
@@ -307,14 +309,14 @@ while True:
 
 
     elif operation == "7":
-        webbrowser.open("https://github.com/Sekomer/Server-Optimization-Model", new = 2)   
+        webbrowser.open("https://github.com/Sekomer/Server-Optimization-Model/blob/master/cloud_optimization.py", new = 2)   
 
     else:
         for i in range(10): 
             os.system('cls')
             print("QUITING...")
             print("[" + "#" * (i+1) + " "*(9-i) + "]")
-            time.sleep(1)
+            time.sleep(0.2)
 
         os.system('cls')
         sys.exit()
