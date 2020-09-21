@@ -3,11 +3,10 @@
 import os
 import sys
 import random
-import multiprocessing
 import time
-import math
 import heapq
 import webbrowser
+from math import ceil
 
 # list of Server Units
 number_of_units = 12
@@ -31,8 +30,8 @@ class Unit():
         self.used_ram = 0
         self.used_storage = 0
     
-    def _heapify(self):
-        heapq.heapify(self.heap)
+    def heapify_for_cpu(self):
+        return heapq.heapify(self.sort_clients_for_cpu)
 
     def sort_clients_for_cpu(self):
         return sorted(self.client_list, key= lambda x: x.cpu)
@@ -68,8 +67,9 @@ class Unit():
 
     # Removes a client from self unit and updates used hardware 
     def remove_client(self, client):
-        self.update_used_hardware(-client.cpu, -client.ram, -client.storage)
+        self.client_list.remove(client)
         self.number_of_clients -= 1
+        self.update_used_hardware(-client.cpu, -client.ram, -client.storage)
     
     # Returns percentage of available hardware as tuple(cpu,ram,storage)
     def available_hardware_percentage(self):
@@ -84,7 +84,7 @@ class Unit():
         return result 
 
 
-# Creating Server Units
+## Creating Server Units ##
 for i in range(number_of_units):
     obj = Unit("unit" + str(i + 1), i + 1)
     unit_objects.append(obj)
@@ -107,16 +107,26 @@ text = """
 [*] Welcome, enter the value of operation you'd like to do.
 [1] Create a Client 
 [2] Delete a Client
-[3] Optimize Units ( for CPU, RAM or Storage ) ***
-[4] Show Clients of one unit
+[3] Optimize Units ( for CPU or Default ) ***
+[4] Show Clients of specific unit
 [5] Show Available Hardware Bar per Unit
 [6] Show Used Hardware Bar per Unit
 [7] Open Github
 [Else] Quit"""
 
 
+# deprecated
 def return_max(iterable, arg):
     return max(iterable ,key = lambda x: x.arg)
+
+
+# (100,80,15) => returns true
+def compare_and_transfer_cpu(x_unit, y_unit, client_cpu):
+    # if original is better, returns zero
+    if abs(x_unit.used_cpu - y_unit.used_cpu) < abs((x_unit.used_cpu - client_cpu) - (y_unit.used_cpu + client_cpu)):
+        return False
+    return True
+
 
 while True:
     os.system('cls')
@@ -207,9 +217,8 @@ while True:
                 break
 
             else:
-                new_client = Client(client_id, client_cpu, client_ram, client_storage, where)
+                new_client = Client(client_id, client_cpu, client_ram, client_storage, where.number)
                 where.add_client(new_client)
-                #where.update_used_hardware(client_cpu, client_ram, client_storage)
 
                 os.system('cls')
                 print(f"[Client Added]",  
@@ -226,10 +235,6 @@ while True:
                 time.sleep(0.01)
                 input("press enter to continue: ")
                 break
-                # the on below gives interesting error :p, updating hardware twice
-                # >>>input("press enter to continue:") 
-                # >>>if keyboard.is_pressed('enter'):
-                # >>>    break
 
         
     elif operation == "2":
@@ -265,46 +270,78 @@ while True:
     elif operation == "3":
         os.system('cls')
         print("Optimization Options")
-        print("[1] Default Optimization {Common Best}", 
-              "[2] Optimize for CPUs", 
-              "[3] Optimize for RAM",
-              "[4]Optimize for Storage", sep="\n")
+        print("[1] Optimize for CPUs", 
+              "[2] Default Optimization", sep="\n")
 
-        opt_type = input("Optimization Criteria: ")
+        opt_type = input("Optimization Type: ")
 
         if opt_type == "1":
-            pass
-
-        elif opt_type == "2":
             #objects 
             client_number_sorted = sorted(unit_objects, key= lambda x: x.number_of_clients)
             crowded_units_list = [i for i in client_number_sorted if i.number_of_clients > 1]
             # ooof moment
             crowded_units_list = crowded_units_list[::-1]
 
-            # If there are empty units and crowded units, biggest unit of crowded goes to empty one
-            for crowded_unit in crowded_units_list:    
-                while any(unit.used_cpu == 0 for unit in unit_objects) and crowded_unit.number_of_clients > 1:
-                    # index 0 is lowest, index -1 is max
-                    cpu_sorted = sorted(unit_objects, key= lambda x: x.used_cpu)
-                    clients_of_crowded = crowded_unit.sort_clients_for_cpu()
-                    # biggest client of crowded unit
-                    moving_client = clients_of_crowded[-1]
-                    crowded_unit.remove_client(moving_client)                
-                    # as soon as there are empty units we can use first one in the list
-                    cpu_sorted[0].add_client(moving_client)
             
-            
-        elif opt_type == "3":
-            pass
+            # If there are empty units and crowded units, biggest unit of crowded goes to empty one and comforts most used server
+            if any(unit.used_cpu == 0 for unit in unit_objects):
+                for crowded_unit in crowded_units_list:    
+                    while any(unit.used_cpu == 0 for unit in unit_objects) and crowded_unit.number_of_clients > 1:
+                        # index 0 is lowest, index -1 is max
+                        cpu_sorted = sorted(unit_objects, key= lambda x: x.used_cpu)
+                        clients_of_crowded = crowded_unit.sort_clients_for_cpu()
+                        # biggest client of crowded unit
+                        moving_client = clients_of_crowded[-1]
+                        crowded_unit.remove_client(moving_client)                
+                        # as soon as there are empty units we can use first one in the list
+                        cpu_sorted[0].add_client(moving_client)
+                        moving_client.unit = cpu_sorted[0].number 
+                    
+                    # if loop comes here that means unit.number_of_clients is no more greater than 1, so remove it and continue
+                    crowded_units_list.remove(crowded_unit)
 
-        elif opt_type == "4":
-            pass
+            # if there are no empty slots and there are some units with more than 1 client
+            if not any(unit.used_cpu == 0 for unit in unit_objects) and crowded_units_list:
+                cpu_sorted = sorted(unit_objects, key= lambda x: x.used_cpu)
+                for unit in cpu_sorted[::-1]:
+                    check = 0
+                    while True:
+                        if not unit.number_of_clients > 1:
+                            break
 
+                        clients_of_crowded = unit.sort_clients_for_cpu()
+                        # if sort doesn't change, break the while loop
+                        if check == clients_of_crowded:
+                            break
+
+                        check = clients_of_crowded.copy()
+
+                        # finding emptiest unit and checking if its the same unit or not
+                        cpu_sorted = sorted(unit_objects, key= lambda x: x.used_cpu)
+                        smallest_unit = cpu_sorted[0]
+                        if smallest_unit == unit:
+                            break
+
+                        # checking if we can transfer smallest or biggest client of crowded unit
+                        little, big = clients_of_crowded[0], clients_of_crowded[-1] 
+                        if compare_and_transfer_cpu(unit, smallest_unit, big.cpu):    
+                            unit.remove_client(big)
+                            smallest_unit.add_client(big) 
+                            big.unit = smallest_unit.number
+
+                        
+                        elif compare_and_transfer_cpu(unit, smallest_unit, little.cpu):
+                            unit.remove_client(big)
+                            smallest_unit.add_client(big)
+                            little.unit = smallest_unit.number
+
+
+        
         else:
             os.system('cls')
             print('Invalid Input !')
             continue
+
 
 
     elif operation == "4":
@@ -338,7 +375,7 @@ while True:
             print(f"Number of Clients: {unit.number_of_clients}")
             print(f"CPU: %{c:.2f}, RAM: %{r:.2f}, Storage: %{s:.2f}")
             for item in (c, r, s):
-                percent = int(math.ceil(item/10))
+                percent = int(ceil(item/10))
                 print("[" + "#" * (percent) + " "*(10-percent) + "]", end=" ")
             print()
             time.sleep(0.2)
@@ -356,7 +393,7 @@ while True:
             print(f"Number of Clients: {unit.number_of_clients}")
             print(f"CPU: %{c:.2f}, RAM: %{r:.2f}, Storage: %{s:.2f}")
             for item in (c, r, s):
-                percent = int(math.ceil(item/10))
+                percent = int(ceil(item/10))
                 print("[" + "#" * (percent) + " "*(10-percent) + "]", end=" ")
             print()
             time.sleep(0.2)
@@ -368,6 +405,13 @@ while True:
 
     elif operation == "7":
         webbrowser.open("https://github.com/Sekomer/Server-Optimization-Model/blob/master/cloud_optimization.py", new = 2)   
+
+    elif operation == "8":
+        name = "qwertyuıopğüişlkjhgfdsazxcvbnmöç"
+        for num, i in enumerate(unit_objects):
+            new_client = Client(name[num: num+2], num+2, 3*(num+1), 100*(num+1), i.number)
+            i.add_client(new_client)
+
 
     else:
         for i in range(10): 
