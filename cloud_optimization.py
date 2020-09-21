@@ -57,7 +57,9 @@ class Unit():
     # Amount of available hardware, returns as tuple(cpu,ram,storage)
     def available_hardware(self):
         c, r, s = self.used_hardware_data()
-        return (self.cpu - c, self.ram - r, self.storage - s)
+        return (self.cpu - c,
+                self.ram - r, 
+                self.storage - s)
 
     # Adds a client to self unit and updates used hardware 
     def add_client(self, client):
@@ -123,8 +125,11 @@ def return_max(iterable, arg):
 # (100,80,15) => returns true
 def compare_and_transfer_cpu(x_unit, y_unit, client_cpu):
     # if original is better, returns zero
-    if abs(x_unit.used_cpu - y_unit.used_cpu) < abs((x_unit.used_cpu - client_cpu) - (y_unit.used_cpu + client_cpu)):
+    current_diff = abs(x_unit.used_cpu - y_unit.used_cpu) 
+    candidate_diff = abs((x_unit.used_cpu - client_cpu) - (y_unit.used_cpu + client_cpu))
+    if  current_diff < candidate_diff:
         return False
+
     return True
 
 
@@ -303,8 +308,10 @@ while True:
             # if there are no empty slots and there are some units with more than 1 client
             if not any(unit.used_cpu == 0 for unit in unit_objects) and crowded_units_list:
                 cpu_sorted = sorted(unit_objects, key= lambda x: x.used_cpu)
+
                 for unit in cpu_sorted[::-1]:
                     check = 0
+                    
                     while True:
                         if not unit.number_of_clients > 1:
                             break
