@@ -37,6 +37,12 @@ class Unit():
     def sort_clients_for_cpu(self):
         return sorted(self.client_list, key= lambda x: x.cpu)
 
+    def sort_clients_for_ram(self):
+        return sorted(self.client_list, key= lambda x: x.ram)
+
+    def sort_clients_for_storage(self):
+        return sorted(self.client_list, key= lambda x: x.storage)
+
     # Changing the amount of used hardware
     def update_used_hardware(self, c_change, r_change, s_change):
         self.used_cpu += c_change
@@ -96,6 +102,7 @@ class Client():
     def update_hardware(self):
         pass    
 
+
 text = """
 [*] Welcome, enter the value of operation you'd like to do.
 [1] Create a Client 
@@ -104,8 +111,9 @@ text = """
 [4] Show Clients of one unit
 [5] Show Available Hardware Bar per Unit
 [6] Show Used Hardware Bar per Unit
-[7] s0urce c0de
+[7] Open Github
 [Else] Quit"""
+
 
 def return_max(iterable, arg):
     return max(iterable ,key = lambda x: x.arg)
