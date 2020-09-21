@@ -275,14 +275,14 @@ while True:
             crowded_units_list = crowded_units_list[::-1]
 
             # If there are empty units and crowded units, biggest unit of crowded goes to empty one
-            for i in crowded_units_list:    
-                while any(unit.used_cpu == 0 for unit in unit_objects) and i.number_of_clients > 1:
+            for crowded_unit in crowded_units_list:    
+                while any(unit.used_cpu == 0 for unit in unit_objects) and crowded_unit.number_of_clients > 1:
                     # index 0 is lowest, index -1 is max
                     cpu_sorted = sorted(unit_objects, key= lambda x: x.used_cpu)
-                    clients_of_crowded = i.sort_clients_for_cpu()
+                    clients_of_crowded = crowded_unit.sort_clients_for_cpu()
                     # biggest client of crowded unit
                     moving_client = clients_of_crowded[-1]
-                    i.remove_client(moving_client)                
+                    crowded_unit.remove_client(moving_client)                
                     # as soon as there are empty units we can use first one in the list
                     cpu_sorted[0].add_client(moving_client)
             
@@ -327,6 +327,7 @@ while True:
         for num, unit in enumerate(unit_objects):
             c, r, s = unit.available_hardware_percentage()
             print(f"Unit{num + 1}:")
+            print(f"Number of Clients: {unit.number_of_clients}")
             print(f"CPU: %{c:.2f}, RAM: %{r:.2f}, Storage: %{s:.2f}")
             for item in (c, r, s):
                 percent = int(math.ceil(item/10))
@@ -344,6 +345,7 @@ while True:
         for num, unit in enumerate(unit_objects):
             c, r, s = unit.used_hardware_percentage()
             print(f"Unit{num + 1}:")
+            print(f"Number of Clients: {unit.number_of_clients}")
             print(f"CPU: %{c:.2f}, RAM: %{r:.2f}, Storage: %{s:.2f}")
             for item in (c, r, s):
                 percent = int(math.ceil(item/10))
