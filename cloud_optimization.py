@@ -335,13 +335,11 @@ while True:
                             smallest_unit.add_client(big)
                             little.unit = smallest_unit.number
 
-
         
         else:
             os.system('cls')
             print('Invalid Input !')
             continue
-
 
 
     elif operation == "4":
