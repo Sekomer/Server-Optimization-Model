@@ -15,7 +15,7 @@ unit_objects = []
 # 12 Units ( 128 CPU, 70TB Storage, 1TB RAM)
 
 # quantity of cpu(unit) / ram(GB) and storage(GB)
-class Unit():
+class Unit(object):
     def __init__(self, name, number):
         # these are static
         self.name = name
@@ -86,14 +86,8 @@ class Unit():
         return result 
 
 
-## Creating Server Units ##
-for i in range(number_of_units):
-    obj = Unit("unit" + str(i + 1), i + 1)
-    unit_objects.append(obj)
-
-
-# Client class, holds id, cpu, ram, storage, unit
-class Client():
+# Client class, holds id, cpu, ram, storage, unit(integer)
+class Client(object):
     def __init__(self, client_id, cpu, ram, storage, unit):
         self.client_id = client_id
         self.cpu = cpu
@@ -105,6 +99,12 @@ class Client():
         pass    
 
 
+## Creating Server Units ##
+for i in range(number_of_units):
+    obj = Unit("unit" + str(i + 1), i + 1)
+    unit_objects.append(obj)
+
+
 text = """
 [*] Welcome, enter the value of operation you'd like to do.
 [1] Create a Client 
@@ -114,15 +114,17 @@ text = """
 [5] Show Available Hardware Bar per Unit
 [6] Show Used Hardware Bar per Unit
 [7] Open Github
+[8] Create 10 random clients on random Units
 [Else] Quit"""
 
 
-# deprecated
+# from a list of objects returns that has maximum of arg attribute
 def return_max(iterable, arg):
-    return max(iterable ,key = lambda x: x.arg)
+    return eval(f"max(iterable, key = lambda x: x.{arg})")
 
 
 # (100,80,15) => returns true
+# returns if it's better or not to transfer that client
 def compare_and_transfer_cpu(x_unit, y_unit, client_cpu):
     # if original is better, returns zero
     current_diff = abs(x_unit.used_cpu - y_unit.used_cpu) 
@@ -413,9 +415,14 @@ while True:
 
     elif operation == "8":
         name = "qwertyuıopğüişlkjhgfdsazxcvbnmöç"
-        for num, i in enumerate(unit_objects):
-            new_client = Client(name[num: num+2], num+2, 3*(num+1), 100*(num+1), i.number)
-            i.add_client(new_client)
+        client_types = ((1,8,250), (4,20,1000), (3,6,700))
+        for _ in range(10):
+            random_id = ''.join(random.choice(name) for i in range(5))
+            random_client = random.choice(client_types)
+            random_unit = random.choice(unit_objects) 
+            a, b, c = random_client
+            new_client = Client(random_id, a, b, c, random_unit.number)
+            random_unit.add_client(new_client)
 
 
     else:
