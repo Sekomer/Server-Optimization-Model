@@ -31,7 +31,7 @@ class Unit(object):
         self.used_storage = 0
     
     def heapify_for_cpu(self):
-        return heapq.heapify(self.sort_clients_for_cpu)
+        return heapq.heapify(self.sort_clients_for_cpu())
 
     def sort_clients_for_cpu(self):
         return sorted(self.client_list, key= lambda x: x.cpu)
