@@ -95,6 +95,9 @@ class Client(object):
         self.storage = storage
         self.unit = unit
 
+    def hardware_info(self):
+        return (self.cpu, self.ram, self.storage)
+
     def update_hardware(self):
         pass    
 
@@ -192,7 +195,7 @@ while True:
 
         for i in unit_objects:
             a,b,c = i.available_hardware()
-            if (a > client_cpu and b > client_ram and c > client_storage):
+            if (a >= client_cpu and b >= client_ram and c >= client_storage):
                 avail.append(i.number)
 
         print()
@@ -202,6 +205,11 @@ while True:
         unit_choice = int(input("To Which Unit [1 to 12] ? / 0 for random: "))
         if not unit_choice in range(13):
             print("Invalid interval !")
+            input("Press enter to continue")
+            continue
+
+        elif unit_choice not in avail:
+            print("Invalid choice !")
             input("Press enter to continue")
             continue
 
@@ -357,13 +365,13 @@ while True:
         where = unit_objects[in_4 -1] 
         print()
         if in_4 in range(1,number_of_units + 1):
-            if where.client_ids == {}:
+            if where.number_of_clients == 0:
                 print("Empty Unit")
             else:
                 print("{0} clients found on Unit {1}".format(where.number_of_clients, in_4))
-                for num, i in enumerate(where.client_ids):
-                    a,b,c = where.client_ids[i]
-                    print(f"[{num + 1}]", i, f" CPUs:{a}, RAM:{b}GB, Storage:{c}GB", end = "\n")
+                for num, client in enumerate(where.client_list):
+                    a, b, c = client.hardware_info()
+                    print(f"[{num + 1}]", client.client_id, f" CPUs:{a}, RAM:{b}GB, Storage:{c}GB", end = "\n")
 
             input("press enter to continue:")
             continue
